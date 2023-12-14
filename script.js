@@ -9,15 +9,24 @@ var backgroundImg = new Image();
 const catOffset = 28;
 var frame = 0;
 
+var x_vel = 0;
+var direction = 1;
+var x = 400;
+var y = 240;
+
 
 document.addEventListener('keydown', function(event){
     //Call user movement function
     if(event.keyCode == '37'){
         console.log("Left");
+        x_vel += 5; 
+        direction = -1;
         //move_player(-speed)
     }
     else if(event.keyCode == '39'){
         console.log("Right");
+        x_vel += 5;
+        direction = 1;
         //move_player(-speed)
     }
     
@@ -81,17 +90,57 @@ function idle_animate(){
     }
 }
 
-function animate(){
+function player_render(){
+    //if x_vel > 0: running animation
+    //else: idle_animate
+    if (img.complete == true && backgroundImg.complete == true){
+        console.log(x_vel)
+        if (x_vel > 0){
+            //temp, need to reset the idle animate frame back to 0
+            frame = 0;
 
+            x += x_vel * direction;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(backgroundImg, 0, 0);
+            ctx.drawImage(img, 0, 16, 32, 32, x, 240, 64, 64);
+        }
+        else{
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(backgroundImg, 0, 0);
+            ctx.drawImage(img, 0, arr[Math.floor(frame / 30)], 32, 32, x, 240, 64, 64);
+            frame++;
+            if(frame > 150){
+                frame = 0;
+            }
+        }
+    }
 }
+
+//Main function that calls every frame; should update all elements that are mutable
+// i.e player, animations, projectiles, dynamic background items
+function animate(){
+    player_render()
+
+    //update to be x_vel * .85 until x_vel < 1(??)
+    if (x_vel > .0015){
+        x_vel *= .85;
+    }
+    else{
+        x_vel = 0;
+    }
+
+    window.requestAnimationFrame(animate);
+}
+
+
 
 idle_load();
 
-
-
 draw(0, 0, 1720, 1080, "./assets/backgrounds/example.png");
 //draw(400, 260, 100, 100, "./assets/characters/player1/idle/Meow-Knight_Idle1.png");
-setInterval(function(){idle_animate()}, 300);
+//setInterval(function(){idle_animate()}, 300);
+
+window.requestAnimationFrame(animate);
 
 
 
