@@ -4,12 +4,13 @@ ctx.canvas.width = window.innerWidth;
 ctx.canvas.height = window.innerHeight;
 
 var img = new Image();
-var arr = [16, 44, 70, 96, 122];
+var arr = [-9, 18, 44, 70, 96, 122];
 var backgroundImg = new Image();
 const catOffset = 28;
 var frame = 0;
 
 var x_vel = 0;
+var x_acel = 0;
 var direction = 1;
 var x = 400;
 var y = 240;
@@ -18,16 +19,14 @@ var y = 240;
 document.addEventListener('keydown', function(event){
     //Call user movement function
     if(event.keyCode == '37'){
-        console.log("Left");
-        x_vel += 5; 
+        x_acel = 10;
+        x_vel = 5; 
         direction = -1;
-        //move_player(-speed)
     }
     else if(event.keyCode == '39'){
-        console.log("Right");
-        x_vel += 5;
+        x_acel = 10;
+        x_vel = 5;
         direction = 1;
-        //move_player(-speed)
     }
     
 })
@@ -63,12 +62,12 @@ function draw(x, y, width, height, src){
     },
     "false",);
 }
-
 function idle_load(){
     var ctx = canvas.getContext("2d");
-    img.src = './assets/characters/player1/idle/Meow-Knight_Idle.png';
+    img.src = './assets/characters/player1/Meow-Knight_Idle.png';
     img.addEventListener("load",    () => {
         ctx.drawImage(img, 0, catOffset * frame, 32, 32, 400, 240, 64, 64);
+
         frame++;
     },
     "false",);
@@ -83,8 +82,8 @@ function idle_animate(){
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(backgroundImg, 0, 0);
         ctx.drawImage(img, 0, arr[frame], 32, 32, 400, 240, 64, 64);
-        frame++;
         if(frame > 4){
+            frame++;
             frame = 0;
         }
     }
@@ -102,14 +101,15 @@ function player_render(){
             x += x_vel * direction;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(backgroundImg, 0, 0);
-            ctx.drawImage(img, 0, 16, 32, 32, x, 240, 64, 64);
+            //cycle through run spritemap at a rate that correlates with velocity
+            ctx.drawImage(img, 0, 16, 32, 32, x, 238, 64, 64);
         }
         else{
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(backgroundImg, 0, 0);
             ctx.drawImage(img, 0, arr[Math.floor(frame / 30)], 32, 32, x, 240, 64, 64);
             frame++;
-            if(frame > 150){
+            if(frame > 180){
                 frame = 0;
             }
         }
@@ -121,7 +121,6 @@ function player_render(){
 function animate(){
     player_render()
 
-    //update to be x_vel * .85 until x_vel < 1(??)
     if (x_vel > .0015){
         x_vel *= .85;
     }
