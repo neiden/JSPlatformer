@@ -4,10 +4,12 @@ class IdleState extends StateInterface{
         
         if (input['left']){
             player.direction = -1;
+            player.xVel += -player.baseSpeed;
             player.changeState('runState');
         }
         else if (input['right']){
             player.direction = 1;
+            player.xVel += player.baseSpeed;
             player.changeState('runState');
         }
         else if (input['up']){
