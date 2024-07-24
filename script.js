@@ -1,31 +1,38 @@
 /*TODO: 
-    > Create function to load all assets    []
-    > Implement tile scrolling              []
-    > Clean up frames when switching state  []
+    > Find map pack and create a level layout []
+    > Smooth tile scroll                      []
+        - Add a small space the player can move
+        without the camera locking
+    > Create function to load all assets      []
+    > Clean up frames when switching state    []
         - Need to set back to 0
-    > Smooth horizontal collision           []
+    > Smooth horizontal collision             []
         - Maybe unique animation for when
         user is intentionally pushing 
         against a wall
-    > Fix vertical collision                []
+    > Fix vertical collision                  []
+        - fix jumping into platforms above player
         - find a way to work without
         using vertRect.y - 1
-    > Sprint jump ??                        [X]
-    > Add sounds                            []
+    > Add sounds                              []
+    
+
+
+    > Sprint jump ??                          [X]
+    > Implement tile scrolling                [x]
+
 */
 
 
 const canvas = document.getElementById('gameScreen');
 const ctx = canvas.getContext('2d'); 
+const origin = [window.innerWidth/2, window.innerHeight/2];
 ctx.canvas.width = window.innerWidth;
 ctx.canvas.height = window.innerHeight;
 
 const img = new Image();
 const bgImg = new Image();
-const wall1 = new Image();
-const floor1 = new Image();
-const floor2 = new Image();
-const ceiling1 = new Image();
+
 
 bgImg.src = './assets/backgrounds/example.png';
 bgImg.addEventListener("load", () => {
@@ -36,45 +43,15 @@ img.addEventListener("load",    () => {
 },
 "false",);
 
-wall1.src = './assets/backgrounds/wall1.png';
-wall1.addEventListener("load",    () => {
-},
-"false",);
-
-floor1.src = './assets/backgrounds/floor1.png';
-floor1.addEventListener("load", () =>{
-
-},
-"false",);
-
-floor2.src = './assets/backgrounds/floor2.png';
-floor2.addEventListener("load", () =>{
-
-},
-"false",);
-
-ceiling1.src = './assets/backgrounds/ceiling1.png';
-ceiling1.addEventListener("load", () =>{
-
-},
-"false",);
-
 
 
 
 const bg = new GameObject(ctx, 0, 0, 1728, 1080, bgImg, 0, 0);
-var player = new Player(ctx, 300, 150, 32, 32, img, 0, 0);
+var player = new Player(ctx, window.innerWidth/2, window.innerHeight/2 - 100, 32, 32, img, 0, 0);
 
 
-const wall = new GameObject(ctx, 488, 200, 150, 200, wall1, 0, 0);
-const floor = new GameObject(ctx, 200, 300, 300, 100, floor1, 0, 0);
-const floorTwo = new GameObject(ctx, 700, 300, 400, 50, floor2, 0, 0);
-const ceilingOne = new GameObject(ctx, 800, 150, 400, 50, ceiling1, 0, 0);
 
-const map = [wall, floor, floorTwo, ceilingOne];
-
-
-var cameraLocked = true;
+var cameraLocked = false;
 
 
 var keymap = {
@@ -96,11 +73,13 @@ document.addEventListener('keyup', function(e){
 });
 
 
+var backgroundMusic = new Audio('./assets/sounds/background.mp3');
 
 //1.) Handle Inputs
 //2.) Update game state
 //3.) Render game
 function tick(){
+    backgroundMusic.play();
     console.log(keydown, player.state, player);
     //Inputs
     player.input(keydown);
@@ -124,7 +103,7 @@ function tick(){
         width: player.width * player.sizeMultiplier - 20,
         height: player.height * player.sizeMultiplier
     }
-
+    
     let horzRect = {
         x: player.x + player.xVel,
         y: player.y, 
@@ -132,20 +111,18 @@ function tick(){
         height: player.height * player.sizeMultiplier
     }
     
-    //Check for collision and update player accordingly
-    for (let i = 0; i < map.length; i++){
-        if (player.isIntersected(map[i], horzRect)){
-            while(player.isIntersected(map[i], horzRect)){
+    this.tileMap.tiles.forEach((tile) => {
+        if (player.isIntersected(tile, horzRect)){
+            while(player.isIntersected(tile, horzRect)){
                 horzRect.x += -Math.sign(player.xVel);
             }
             player.x = horzRect.x;
             player.xVel = 0;
         }
-        if (player.isIntersected(map[i], vertRect)){
-            while(player.isIntersected(map[i], vertRect)){
+        if (player.isIntersected(tile, vertRect)){
+            while(player.isIntersected(tile, vertRect)){ 
                 vertRect.y += -Math.sign(player.yVel);
             }
-            //player.y = vertRect.y;    
             player.yVel = 0;
             if (Math.abs(player.xVel) > 0) {
                 player.changeState("runState");
@@ -154,32 +131,41 @@ function tick(){
                 player.changeState("idleState");
             }
         }
-    }
+    });
 
-    if (cameraLocked) {
-        for (let i = 0; i < map.length; i++){
-            map[i].x += -player.xVel;
-            map[i].y -= player.yVel;
-        }
+
+    if (originDistance()){
+        this.tileMap.tiles.forEach((tile) => {
+            tile.x += -player.xVel;
+            tile.y += -player.yVel;
+        });
     }
     else{
         player.x += player.xVel;
         player.y += player.yVel;
     }
-    //console.log(player.yVel)
+
     //Render
-    if(player.img.complete == true && bg.img.complete == true && wall.img.complete == true){
-        //console.log("Current state: " + player.state.toString())
+    if(player.img.complete == true && bg.img.complete == true){
         bg.render();
         player.render();
-        wall.render();
-        floor.render();
-        floorTwo.render();
-        ceilingOne.render();
+        tileMap.render(ctx);
     }
 
     window.requestAnimationFrame(tick);
 }
+
+//TODO actually implement and use division of distance to create sliding camera effect
+function originDistance(){
+    // let xDistance = player.x - origin[0];
+    // let yDistance = player.y - origin[1];
+    // return Math.abs(xDistance) > 100 || Math.abs(yDistance) > 100;
+    return true;
+}
+
+
+var tileMap = new TileMap("./assets/backgrounds/Tileset.png", "temp", 32, 100, 300)
+
 
 window.requestAnimationFrame(tick);
 

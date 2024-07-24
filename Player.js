@@ -3,6 +3,8 @@ class Player extends GameObject{
     runFrameX = 0;
     runFrameY = 1;
 
+    localX = 0;
+    localY = 0;
     direction = 1;
     xVel = 0;
     yVel = 0;
@@ -70,17 +72,18 @@ class Player extends GameObject{
             return true;
         }
     }
-    isIntersected(mapObject, rect){
-        if (rect.x >= mapObject.x + mapObject.width){
+
+    isIntersected(tile, rect){
+        if (rect.x >= tile.x + tile.size){
             return false;
         }
-        else if (rect.x + rect.width <= mapObject.x){
+        else if (rect.x + rect.width <= tile.x){
             return false;
         }
-        else if (rect.y + rect.height <= mapObject.y){
+        else if (rect.y + rect.height <= tile.y){
             return false;
         }
-        else if(rect.y >= mapObject.y + mapObject.height){
+        else if(rect.y >= tile.y + tile.size){
             return false;
         }
         else{
