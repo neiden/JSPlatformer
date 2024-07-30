@@ -30,9 +30,20 @@ const origin = [window.innerWidth/2, window.innerHeight/2];
 ctx.canvas.width = window.innerWidth;
 ctx.canvas.height = window.innerHeight;
 
+
 const img = new Image();
 const bgImg = new Image();
+const bgLayer1 = new Image();
+const bgLayer2 = new Image();
+const bgLayer3 = new Image();
+const bgLayer4 = new Image();
 
+bgLayer1.src = './assets/backgrounds/2.1.png';
+bgLayer2.src = './assets/backgrounds/2.2.png';
+bgLayer3.src = './assets/backgrounds/2.3.png';
+bgLayer4.src = './assets/backgrounds/2.4.png';
+
+background = new BackgroundParallax([bgLayer1, bgLayer2, bgLayer3, bgLayer4], ctx, window.innerWidth, window.innerHeight);
 
 bgImg.src = './assets/backgrounds/example.png';
 bgImg.addEventListener("load", () => {
@@ -80,10 +91,9 @@ var backgroundMusic = new Audio('./assets/sounds/background.mp3');
 //3.) Render game
 function tick(){
     backgroundMusic.play();
-    console.log(keydown, player.state, player);
+    //console.log(keydown, player.state, player);
     //Inputs
     player.input(keydown);
-
 
     //Update
     if(Math.abs(player.xVel) > .0015){
@@ -139,6 +149,10 @@ function tick(){
             tile.x += -player.xVel;
             tile.y += -player.yVel;
         });
+        this.tileMap.cosmeticTiles.forEach((tile) => {
+            tile.x += -player.xVel;
+            tile.y += -player.yVel;
+        });
     }
     else{
         player.x += player.xVel;
@@ -148,8 +162,9 @@ function tick(){
     //Render
     if(player.img.complete == true && bg.img.complete == true){
         bg.render();
-        player.render();
+        background.render();
         tileMap.render(ctx);
+        player.render();
     }
 
     window.requestAnimationFrame(tick);
@@ -157,14 +172,14 @@ function tick(){
 
 //TODO actually implement and use division of distance to create sliding camera effect
 function originDistance(){
-    // let xDistance = player.x - origin[0];
-    // let yDistance = player.y - origin[1];
-    // return Math.abs(xDistance) > 100 || Math.abs(yDistance) > 100;
-    return true;
+    let xDistance = player.x - origin[0] + player.xVel;
+    let yDistance = player.y - origin[1] + player.yVel;
+    console.log("player is this far from origin: ", xDistance, yDistance);
+    return Math.abs(xDistance) > 30 || Math.abs(yDistance) > 100;
 }
 
 
-var tileMap = new TileMap("./assets/backgrounds/Tileset.png", "temp", 32, 100, 300)
+var tileMap = new TileMap("./assets/backgrounds/Tileset2.png", "temp", 32, window.innerWidth / 2 - 75 , window.innerHeight / 2 - 390);
 
 
 window.requestAnimationFrame(tick);

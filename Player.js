@@ -42,6 +42,8 @@ class Player extends GameObject{
             this.state = Player.runState;
         }
     }
+
+    
     isCollided(){
         if (super.isCollided(this.x + this.xVel, this.y + this.yVel)){
             return true;
@@ -50,22 +52,22 @@ class Player extends GameObject{
     }
 
     isHorizontalCollided(mapObject, horzRect){
-        let vertRect = {
-            x: this.x + this.xVel,
-            y: this.y,
-            width: this.width * this.sizeMultiplier,
-            height: this.height * this.sizeMultiplier
-        }
-        if (vertRect.x >= mapObject.x + mapObject.width){
+        // let vertRect = {
+        //     x: this.x + this.xVel,
+        //     y: this.y,
+        //     width: this.width * this.sizeMultiplier,
+        //     height: this.height * this.sizeMultiplier
+        // }
+        if (horzRect.x >= mapObject.x + mapObject.width){
             return false;
         }
-        else if (vertRect.x + vertRect.width <= mapObject.x){
+        else if (horzRect.x + horzRect.width <= mapObject.x){
             return false;
         }
-        else if (vertRect.y + vertRect.height <= mapObject.y){
+        else if (horzRect.y + horzRect.height <= mapObject.y){
             return false;
         }
-        else if(vertRect.y >= mapObject.y + mapObject.height){
+        else if(horzRect.y >= mapObject.y + mapObject.height){
             return false;
         }
         else{
