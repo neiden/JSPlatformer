@@ -8,7 +8,10 @@ class Tile{
         this.tilesetY = tilesetY;
         this.size = size;
         this.type = type;
+        this.originX = x;
+        this.originY = y;
     }
+     
 
     render(ctx, img){
         ctx.drawImage(img, this.tilesetX, this.tilesetY, this.size, this.size, this.x, this.y, this.size, this.size);

@@ -38,6 +38,12 @@ const bgLayer2 = new Image();
 const bgLayer3 = new Image();
 const bgLayer4 = new Image();
 
+const START_POS_X = 0 
+const START_POS_Y = 158
+const MAP_EDGE = 1000
+var globalXPos = 0
+var globalYPos = 0
+
 bgLayer1.src = './assets/backgrounds/2.1.png';
 bgLayer2.src = './assets/backgrounds/2.2.png';
 bgLayer3.src = './assets/backgrounds/2.3.png';
@@ -132,7 +138,7 @@ function tick(){
         if (player.isIntersected(tile, vertRect)){
             while(player.isIntersected(tile, vertRect)){ 
                 vertRect.y += -Math.sign(player.yVel);
-            }
+            }https://github.com/neiden/JSPlatformer.githttps://github.com/neiden/JSPlatformer.githttps://github.com/neiden/JSPlatformer.githttps://github.com/neiden/JSPlatformer.git
             player.yVel = 0;
             if (Math.abs(player.xVel) > 0) {
                 player.changeState("runState");
@@ -157,6 +163,26 @@ function tick(){
     else{
         player.x += player.xVel;
         player.y += player.yVel;
+    }
+    globalYPos += player.yVel;
+    globalXPos += player.xVel;
+  
+    // Player falls off gameScreen
+    console.log("Global Y position: " + globalYPos + " Global X position: " + globalXPos)
+    if (globalYPos > 800){
+      player.xVel = 0
+      player.yVel = 0 
+      //player.y = START_POS_Y - 50
+      globalYPos = START_POS_Y
+      globalXPos = START_POS_X
+      this.tileMap.tiles.forEach((tile) => {
+        tile.x = tile.originX - 50
+        tile.y = tile.originY + 150
+      });
+      this.tileMap.cosmeticTiles.forEach((tile) => {
+        tile.x = tile.originX - 50
+        tile.y = tile.originY + 150
+      });
     }
 
     //Render
