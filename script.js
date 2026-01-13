@@ -23,6 +23,8 @@
 
 */
 
+const FPS = 60;
+var debugMode = false;
 
 const canvas = document.getElementById('gameScreen');
 const ctx = canvas.getContext('2d'); 
@@ -38,6 +40,10 @@ const bgLayer2 = new Image();
 const bgLayer3 = new Image();
 const bgLayer4 = new Image();
 
+const experiencePlaqueImg = new Image();
+//512, 768
+var experiencePlaque = new GameObject(ctx, 1700, -60, 1000, 768, experiencePlaqueImg, 0, 0)
+
 const START_POS_X = 0 
 const START_POS_Y = 158
 const MAP_EDGE = 1000
@@ -48,6 +54,10 @@ bgLayer1.src = './assets/backgrounds/2.1.png';
 bgLayer2.src = './assets/backgrounds/2.2.png';
 bgLayer3.src = './assets/backgrounds/2.3.png';
 bgLayer4.src = './assets/backgrounds/2.4.png';
+
+experiencePlaqueImg.src = './assets/objects/VerticalPlaqueTest.png';
+
+var assets = [experiencePlaque];
 
 background = new BackgroundParallax([bgLayer1, bgLayer2, bgLayer3, bgLayer4], ctx, window.innerWidth, window.innerHeight);
 
@@ -92,10 +102,17 @@ document.addEventListener('keyup', function(e){
 
 var backgroundMusic = new Audio('./assets/sounds/background.mp3');
 
+
+var breakout = 0;
+var delta = Date.now();
 //1.) Handle Inputs
 //2.) Update game state
 //3.) Render game
 function tick(){
+  var now = Date.now();   
+  if (now - delta > (1000/FPS)){
+    
+
     backgroundMusic.play();
     //console.log(keydown, player.state, player);
     //Inputs
@@ -112,34 +129,42 @@ function tick(){
     if (player.yVel < 15){
         player.yVel += 1;
     }
+    
+    let playerHeadHitbox = {
+      x: player.x,
+      y: player.y + player.yVel,
+      width: player.width * player.sizeMultiplier - 30,
+      height: (player.height * .25) * player.sizeMultiplier
+    }
+    let playerFeetHitbox = {
+        x: player.x,
+        y: player.y + player.yVel + (player.height *  1.5),
+        width: player.width * player.sizeMultiplier - 30,
+        height: player.sizeMultiplier * (player.height * .25)
+    }
 
     let vertRect = {
         x: player.x,
         y: player.y + player.yVel,
-        width: player.width * player.sizeMultiplier - 20,
+        width: player.width * player.sizeMultiplier - 30,
         height: player.height * player.sizeMultiplier
     }
     
     let horzRect = {
         x: player.x + player.xVel,
         y: player.y, 
-        width: player.width * player.sizeMultiplier - 20,
+        width: player.width * player.sizeMultiplier - 30,
         height: player.height * player.sizeMultiplier
     }
     
     this.tileMap.tiles.forEach((tile) => {
-        if (player.isIntersected(tile, horzRect)){
-            while(player.isIntersected(tile, horzRect)){
-                horzRect.x += -Math.sign(player.xVel);
+        if (player.isIntersected(tile, playerFeetHitbox) && Math.abs(player.yVel > 0)){
+            while(player.isIntersected(tile, playerFeetHitbox)){ 
+                playerFeetHitbox.y += -Math.sign(player.yVel);
             }
-            player.x = horzRect.x;
-            player.xVel = 0;
-        }
-        if (player.isIntersected(tile, vertRect)){
-            while(player.isIntersected(tile, vertRect)){ 
-                vertRect.y += -Math.sign(player.yVel);
-            }https://github.com/neiden/JSPlatformer.githttps://github.com/neiden/JSPlatformer.githttps://github.com/neiden/JSPlatformer.githttps://github.com/neiden/JSPlatformer.git
-            player.yVel = 0;
+            //player.y = playerHeadHitbox.y;
+          player.y = playerFeetHitbox.y - player.height * 1.5;  
+          player.yVel = 0;
             if (Math.abs(player.xVel) > 0) {
                 player.changeState("runState");
             }
@@ -147,8 +172,30 @@ function tick(){
                 player.changeState("idleState");
             }
         }
+        else if (player.isIntersected(tile, playerHeadHitbox) && Math.abs(player.yVel > 0)){
+          while(player.isIntersected(tile, playerHeadHitbox)){
+            playerHeadHitbox.y += -Math.sign(player.yVel);
+          }
+          player.yVel = 0 // consider adding a value here for a 'bounce' back down when hitting ceilings
+          player.y = tile.y + tile.size;
+          player.changeState("idleState")// TODO update this to a falling state
+        }
+        if (player.isIntersected(tile, horzRect)){
+            while(player.isIntersected(tile, horzRect)){
+                horzRect.x += -Math.sign(player.xVel);
+                breakout += 1;
+                // if (breakout > 200){
+                //   console.log("bad bad bad");
+                //   breakout = 0;
+                //   break;
+                // }
+                
+            }
+            player.x = horzRect.x;
+            player.xVel = 0;
+        }
+         
     });
-
 
     if (originDistance()){
         this.tileMap.tiles.forEach((tile) => {
@@ -159,6 +206,10 @@ function tick(){
             tile.x += -player.xVel;
             tile.y += -player.yVel;
         });
+        this.assets.forEach((asset) => {
+          asset.x += -player.xVel;
+          asset.y += -player.yVel;
+        })
     }
     else{
         player.x += player.xVel;
@@ -168,11 +219,10 @@ function tick(){
     globalXPos += player.xVel;
   
     // Player falls off gameScreen
-    console.log("Global Y position: " + globalYPos + " Global X position: " + globalXPos)
+   //  console.log("Global Y position: " + globalYPos + " Global X position: " + globalXPos)
     if (globalYPos > 800){
       player.xVel = 0
       player.yVel = 0 
-      //player.y = START_POS_Y - 50
       globalYPos = START_POS_Y
       globalXPos = START_POS_X
       this.tileMap.tiles.forEach((tile) => {
@@ -190,10 +240,34 @@ function tick(){
         bg.render();
         background.render();
         tileMap.render(ctx);
+        assets.forEach((asset) => asset.render());
         player.render();
+
+ 
+        if (debugMode){
+          ctx.beginPath(); 
+          ctx.fillStyle = "blue";
+          ctx.rect(playerHeadHitbox.x, playerHeadHitbox.y, playerHeadHitbox.width, playerHeadHitbox.height);
+          ctx.fill();
+
+          ctx.beginPath();
+          ctx.fillStyle = "green";
+          ctx.rect(horzRect.x, horzRect.y, horzRect.width, horzRect.height);
+          ctx.fill();
+
+          ctx.beginPath(); 
+          ctx.fillStyle = "red";
+          ctx.rect(playerFeetHitbox.x, playerFeetHitbox.y, playerFeetHitbox.width, playerFeetHitbox.height);
+          ctx.fill();
+        }
     }
 
     window.requestAnimationFrame(tick);
+    delta = now - (delta % (1000/FPS));
+  }
+  else{
+    window.requestAnimationFrame(tick);
+  }
 }
 
 //TODO actually implement and use division of distance to create sliding camera effect

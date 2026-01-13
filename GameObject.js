@@ -32,16 +32,14 @@ class GameObject{
 
     playerRender(xOffset, yOffset, x , y, size, direction){
         if (direction > 0){
-            this.ctx.drawImage(this.img, xOffset, yOffset, this.width, this.height, x, y, this.width*size, this.height*size);
+            this.ctx.drawImage(this.img, xOffset, yOffset, this.width, this.height, x-10, y, this.width*size, this.height*size);
         }
         else{
             this.ctx.translate(x+this.img.width, y);
             this.ctx.scale(-1,1);
-            this.ctx.drawImage(this.img, xOffset, yOffset, this.width, this.height, 0, 0, this.width*size, this.height*size);
+            this.ctx.drawImage(this.img, xOffset, yOffset, this.width, this.height, 15, 0, this.width*size, this.height*size);
             this.ctx.setTransform(1,0,0,1,0,0);
         }
     }
-
-
     
 }
