@@ -32,7 +32,6 @@ const origin = [window.innerWidth/2, window.innerHeight/2];
 ctx.canvas.width = window.innerWidth;
 ctx.canvas.height = window.innerHeight;
 
-
 const img = new Image();
 const bgImg = new Image();
 const bgLayer1 = new Image();
@@ -42,7 +41,8 @@ const bgLayer4 = new Image();
 
 const experiencePlaqueImg = new Image();
 //512, 768
-var experiencePlaque = new GameObject(ctx, 1700, -60, 1000, 768, experiencePlaqueImg, 0, 0)
+const experiencePlaqueOrigin = [1700, -60];
+var experiencePlaque = new GameObject(ctx, experiencePlaqueOrigin[0], experiencePlaqueOrigin[1], 1000, 768, experiencePlaqueImg, 0, 0);
 
 const START_POS_X = 0 
 const START_POS_Y = 158
@@ -72,6 +72,26 @@ img.addEventListener("load",    () => {
 
 
 
+function respawn(){
+  player.xVel = 0
+  player.yVel = 0 
+  player.x = window.innerWidth / 2;
+  player.y = window.innerHeight / 2 - 100;
+  globalYPos = START_POS_Y
+  globalXPos = START_POS_X
+  this.tileMap.tiles.forEach((tile) => {
+    tile.x = tile.originX;
+    tile.y = tile.originY;
+  });
+  this.tileMap.cosmeticTiles.forEach((tile) => {
+    tile.x = tile.originX;
+    tile.y = tile.originY;
+  }); 
+  this.assets.forEach((asset) => {
+    experiencePlaque.x = experiencePlaqueOrigin[0];
+    experiencePlaque.y = experiencePlaqueOrigin[1];
+  });
+}
 
 const bg = new GameObject(ctx, 0, 0, 1728, 1080, bgImg, 0, 0);
 var player = new Player(ctx, window.innerWidth/2, window.innerHeight/2 - 100, 32, 32, img, 0, 0);
@@ -142,44 +162,15 @@ function tick(){
         width: player.width * player.sizeMultiplier - 30,
         height: player.sizeMultiplier * (player.height * .25)
     }
-
-    let vertRect = {
-        x: player.x,
-        y: player.y + player.yVel,
-        width: player.width * player.sizeMultiplier - 30,
-        height: player.height * player.sizeMultiplier
-    }
     
     let horzRect = {
         x: player.x + player.xVel,
-        y: player.y, 
+        y: player.y , 
         width: player.width * player.sizeMultiplier - 30,
         height: player.height * player.sizeMultiplier
     }
     
     this.tileMap.tiles.forEach((tile) => {
-        if (player.isIntersected(tile, playerFeetHitbox) && Math.abs(player.yVel > 0)){
-            while(player.isIntersected(tile, playerFeetHitbox)){ 
-                playerFeetHitbox.y += -Math.sign(player.yVel);
-            }
-            //player.y = playerHeadHitbox.y;
-          player.y = playerFeetHitbox.y - player.height * 1.5;  
-          player.yVel = 0;
-            if (Math.abs(player.xVel) > 0) {
-                player.changeState("runState");
-            }
-            else{
-                player.changeState("idleState");
-            }
-        }
-        else if (player.isIntersected(tile, playerHeadHitbox) && Math.abs(player.yVel > 0)){
-          while(player.isIntersected(tile, playerHeadHitbox)){
-            playerHeadHitbox.y += -Math.sign(player.yVel);
-          }
-          player.yVel = 0 // consider adding a value here for a 'bounce' back down when hitting ceilings
-          player.y = tile.y + tile.size;
-          player.changeState("idleState")// TODO update this to a falling state
-        }
         if (player.isIntersected(tile, horzRect)){
             while(player.isIntersected(tile, horzRect)){
                 horzRect.x += -Math.sign(player.xVel);
@@ -193,6 +184,27 @@ function tick(){
             }
             player.x = horzRect.x;
             player.xVel = 0;
+        }
+        else if(player.isIntersected(tile, playerFeetHitbox) && Math.abs(player.yVel > 0)){
+            while(player.isIntersected(tile, playerFeetHitbox)){ 
+                playerFeetHitbox.y += -Math.sign(player.yVel);
+            }
+          player.y = playerFeetHitbox.y - player.height * 1.5;  
+          player.yVel = 0;
+            if (Math.abs(player.xVel) > 0) {
+                player.changeState("runState");
+            }
+            else{
+                player.changeState("idleState");
+            }
+        }
+        if (player.isIntersected(tile, playerHeadHitbox)){
+          while(player.isIntersected(tile, playerHeadHitbox)){
+            playerHeadHitbox.y += -Math.sign(player.yVel);
+          }
+          player.yVel = 0 // consider adding a value here for a 'bounce' back down when hitting ceilings
+          player.y = playerHeadHitbox.y;
+          player.changeState("jumpState")// TODO update this to a falling state
         }
          
     });
@@ -221,23 +233,12 @@ function tick(){
     // Player falls off gameScreen
    //  console.log("Global Y position: " + globalYPos + " Global X position: " + globalXPos)
     if (globalYPos > 800){
-      player.xVel = 0
-      player.yVel = 0 
-      globalYPos = START_POS_Y
-      globalXPos = START_POS_X
-      this.tileMap.tiles.forEach((tile) => {
-        tile.x = tile.originX - 50
-        tile.y = tile.originY + 150
-      });
-      this.tileMap.cosmeticTiles.forEach((tile) => {
-        tile.x = tile.originX - 50
-        tile.y = tile.originY + 150
-      });
+      respawn();
     }
 
     //Render
     if(player.img.complete == true && bg.img.complete == true){
-        bg.render();
+       // bg.render();
         background.render();
         tileMap.render(ctx);
         assets.forEach((asset) => asset.render());
@@ -267,6 +268,7 @@ function tick(){
   }
   else{
     window.requestAnimationFrame(tick);
+    console.log("too fast");
   }
 }
 
@@ -274,7 +276,7 @@ function tick(){
 function originDistance(){
     let xDistance = player.x - origin[0] + player.xVel;
     let yDistance = player.y - origin[1] + player.yVel;
-    console.log("player is this far from origin: ", xDistance, yDistance);
+    //console.log("player is this far from origin: ", xDistance, yDistance);
     return Math.abs(xDistance) > 30 || Math.abs(yDistance) > 100;
 }
 

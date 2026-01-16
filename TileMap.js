@@ -65,7 +65,7 @@ class TileMap{
           }
       }
 
-        console.log("All Tiles: " + JSON.stringify(this.tiles));
+//        console.log("All Tiles: " + JSON.stringify(this.tiles));
     }
 
     render(ctx){
